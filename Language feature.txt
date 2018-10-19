@@ -1,0 +1,7 @@
+Language feature -
+	1. Print string					[x]
+	2. Pring numbers				[x]
+	3. Evaluate math expression		[x]
+	4. Variable assignment			[x]
+	5. Input data					[x]
+	6. Condition statements			[ ]
