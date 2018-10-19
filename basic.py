@@ -19,6 +19,7 @@ def lex(fileContent):
 	isVar = 0;
 	isRightValue = 0;
 	isPrinting = 0;
+	isRightFlag = 0;
 
 	tokens = []
 	chars = list(fileContent)
@@ -41,6 +42,7 @@ def lex(fileContent):
 			isExpr = 0
 			isVar = 0
 			isRightValue = 0
+			isRightFlag = 0
 		elif(c == " " and isString == 0):
 			if(tok == "PRINT"):
 				tokens.append("PRINT")
@@ -49,11 +51,16 @@ def lex(fileContent):
 				tokens.append("INPUT")
 			tok = ""
 
-		elif(c == "$" and isRightValue == 0):
+		elif(c == "$" and isRightValue == 0 and isPrinting == 0):
 			isVar = 1
-
+		elif(c == "$" and isRightValue == 0 and isPrinting == 1):
+			if(expr!=""):
+				expr += c
+			else:
+				numbers += c
+				isRightFlag = 1
 		elif(isVar == 1):
-			if(c not in "="):
+			if(c != "="):
 				var += c
 			else:
 				isVar = 0;
@@ -61,9 +68,10 @@ def lex(fileContent):
 		elif(c in "+-/*()" and isExpr == 0):
 			expr += numbers+c
 			isExpr = 1
+			isRightFlag == 0
 		elif isExpr == 1:
 			expr += c
-		elif((c in "1234567890."and isString == 0) or isRightValue == 1):
+		elif((c in "1234567890."and isString == 0) or isRightValue == 1 or isRightFlag == 1):
 			numbers += c
 		elif(c == "\"" and isString == 0):
 			isString = 1
@@ -75,7 +83,7 @@ def lex(fileContent):
 			string += c
 		else:
 			tok += c
-	print(tokens)
+	# print(tokens)
 	# print(varDict)
 	return tokens
 
@@ -108,9 +116,9 @@ def parse(data):
 			i += 2
 
 		elif(data[i] == "INPUT"):
-			inputString = data[i+1].split(":")[1]
+			inputString = data[i+1]
 			inputVar = data[i+2].split(":")[1]
-			varDict[inputVar] = input(inputString)
+			varDict[inputVar] = input(inputString.replace("STRING:",""))
 			print(varDict)
 			i += 3
 
@@ -119,7 +127,7 @@ def run():
 	file = openFile(argv[1])
 	tokens = lex(file)
 	parse(tokens)
-	print(varDict)
+	# print(varDict)
 
 run()
 	
