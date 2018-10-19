@@ -1,2 +1,2 @@
-INPUT "Enter no:"     $a
-PRINT $a
+INPUT "Enter here >>" $a
+PRINT $a*200

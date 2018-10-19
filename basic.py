@@ -23,6 +23,7 @@ def lex(fileContent):
 
 	tokens = []
 	chars = list(fileContent)
+
 	for c in chars:
 		if(c == "\n"):
 			if(numbers != "" and isExpr == 0):
@@ -83,7 +84,7 @@ def lex(fileContent):
 			string += c
 		else:
 			tok += c
-	# print(tokens)
+	print(tokens)
 	# print(varDict)
 	return tokens
 
@@ -116,11 +117,15 @@ def parse(data):
 			i += 2
 
 		elif(data[i] == "INPUT"):
-			inputString = data[i+1]
-			inputVar = data[i+2].split(":")[1]
-			varDict[inputVar] = input(inputString.replace("STRING:",""))
-			print(varDict)
-			i += 3
+			if("VAR:" in data[i+1]):
+				inputVar = data[i+1].split(":")[1]
+				varDict[inputVar] = input()
+				i += 2
+			else:
+				inputString = data[i+1]
+				inputVar = data[i+2].split(":")[1]
+				varDict[inputVar] = input(inputString.replace("STRING:",""))
+				i += 3
 
 
 def run():

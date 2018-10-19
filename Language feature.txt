@@ -5,3 +5,4 @@ Language feature -
 	4. Variable assignment			[x]
 	5. Input data					[x]
 	6. Condition statements			[ ]
+	7. Loops						[ ]
