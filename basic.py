@@ -85,10 +85,6 @@ def lex(fileContent):
 			numbers += c
 		elif(c == "\"" and isString == 0):
 			isString = 1
-		# elif(c == "\"" and isString == 1):
-		# 	isString = 0
-		# 	# tokens.append("STRING:"+string)
-		# 	string = ""
 		elif(isString == 1):
 			string += c
 		else:
