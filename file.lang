@@ -1,2 +1,3 @@
-INPUT "Enter here >>" $a
-PRINT $a*200
+$a = "hello"
+$b = "code lang"
+PRINT $b

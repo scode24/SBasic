@@ -19,7 +19,7 @@ def lex(fileContent):
 	isVar = 0;
 	isRightValue = 0;
 	isPrinting = 0;
-	isRightFlag = 0;
+	isRightVarFlag = 0;
 
 	tokens = []
 	chars = list(fileContent)
@@ -29,21 +29,30 @@ def lex(fileContent):
 			if(numbers != "" and isExpr == 0):
 				if(var != ""):
 					tokens.append("VAR:"+var)
-				tokens.append("NUM:"+numbers)
+				if(len(re.findall(r"[/,*,-,+,.,(,),0-9,=,\"]",numbers))==0):
+					tokens.append("VAR:"+numbers)
+				else:
+					tokens.append("NUM:"+numbers)
 			elif(expr != ""):
 				if(var != ""):
 					tokens.append("VAR:"+var)
 				tokens.append("EXPR:"+expr)
+			elif(string !=""):
+				if(var !=""):
+					tokens.append("VAR:"+var)
+				tokens.append("STRING:"+string.replace("\"",""))
 			elif(var != ""):
 				tokens.append("VAR:"+var)
 			numbers = ""
+			string = ""
 			expr = ""
 			var = ""
 			tok = ""
 			isExpr = 0
 			isVar = 0
+			isString = 0
 			isRightValue = 0
-			isRightFlag = 0
+			isRightVarFlag = 0
 		elif(c == " " and isString == 0):
 			if(tok == "PRINT"):
 				tokens.append("PRINT")
@@ -59,7 +68,7 @@ def lex(fileContent):
 				expr += c
 			else:
 				numbers += c
-				isRightFlag = 1
+			isRightVarFlag = 1
 		elif(isVar == 1):
 			if(c != "="):
 				var += c
@@ -69,22 +78,22 @@ def lex(fileContent):
 		elif(c in "+-/*()" and isExpr == 0):
 			expr += numbers+c
 			isExpr = 1
-			isRightFlag == 0
+			isRightVarFlag = 0
 		elif isExpr == 1:
 			expr += c
-		elif((c in "1234567890."and isString == 0) or isRightValue == 1 or isRightFlag == 1):
+		elif((c in "1234567890." and isString == 0) or (isRightValue == 1 and c!="\"" and isString == 0) or isRightVarFlag == 1):
 			numbers += c
 		elif(c == "\"" and isString == 0):
 			isString = 1
-		elif(c == "\"" and isString == 1):
-			isString = 0
-			tokens.append("STRING:"+string)
-			string = ""
+		# elif(c == "\"" and isString == 1):
+		# 	isString = 0
+		# 	# tokens.append("STRING:"+string)
+		# 	string = ""
 		elif(isString == 1):
 			string += c
 		else:
 			tok += c
-	print(tokens)
+	# print(tokens)
 	# print(varDict)
 	return tokens
 
@@ -107,13 +116,17 @@ def parse(data):
 			elif(dataType == "EXPR"  or dataType == "NUM"):
 				print(calculateExpr(value))
 			elif(dataType == "VAR"):
-				print(varDict[value])
+				print(varDict[value.replace("$","")])
 			i += 2
 
 		elif("VAR:" in data[i]):
 			varName = data[i].split(":")[1]
 			value = data[i+1].split(":")[1]
-			varDict[varName] = str(calculateExpr(value))
+			varType = data[i+1].split(":")[0]
+			if(varType == "STRING"):
+				varDict[varName] = value
+			else:
+				varDict[varName] = str(calculateExpr(value))
 			i += 2
 
 		elif(data[i] == "INPUT"):
