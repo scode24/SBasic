@@ -1,3 +1,9 @@
-$a = "hello"
-$b = "code lang"
-PRINT $b
+PRINT "****** Even/Odd finder *******"
+INPUT "Enter number :" $n
+PRINT "******************************"
+IF $n % 2 = 0
+PRINT "Even number"
+END IF
+IF $n % 2 > 0
+PRINT "Odd number"
+END IF

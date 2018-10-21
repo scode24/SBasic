@@ -1,5 +1,5 @@
 
-from sys import * 
+from sys import *
 import re
 
 varDict = {}
@@ -14,22 +14,26 @@ def lex(fileContent):
 	numbers = ""
 	var = ""
 	expr = ""
+	ifCond= ""
 	isString = 0;
 	isExpr = 0;
 	isVar = 0;
 	isRightValue = 0;
 	isPrinting = 0;
 	isRightVarFlag = 0;
+	ifControl = 0;
 
 	tokens = []
 	chars = list(fileContent)
+	ifList = []
+	ifCount = 0
 
 	for c in chars:
 		if(c == "\n"):
 			if(numbers != "" and isExpr == 0):
 				if(var != ""):
 					tokens.append("VAR:"+var)
-				if(len(re.findall(r"[/,*,-,+,.,(,),0-9,=,\"]",numbers))==0):
+				if(len(re.findall(r"[/,*,-,+,%,.,(,),0-9,=,\"]",numbers))==0):
 					tokens.append("VAR:"+numbers)
 				else:
 					tokens.append("NUM:"+numbers)
@@ -41,6 +45,8 @@ def lex(fileContent):
 				if(var !=""):
 					tokens.append("VAR:"+var)
 				tokens.append("STRING:"+string.replace("\"",""))
+			elif(ifControl == 1):
+				tokens.append("COND:"+ifCond)
 			elif(var != ""):
 				tokens.append("VAR:"+var)
 			numbers = ""
@@ -48,19 +54,30 @@ def lex(fileContent):
 			expr = ""
 			var = ""
 			tok = ""
+			ifCond = ""
 			isExpr = 0
 			isVar = 0
 			isString = 0
 			isRightValue = 0
 			isRightVarFlag = 0
+			ifControl = 0
+			isPrinting = 0
 		elif(c == " " and isString == 0):
 			if(tok == "PRINT"):
 				tokens.append("PRINT")
 				isPrinting = 1
+			elif(tok == "IF"):
+				ifCount += 1
+				ifList.append(str(ifCount))
+				tokens.append("IF:"+str(ifCount))
+				ifControl = 1
 			elif(tok == "INPUT"):
 				tokens.append("INPUT")
+			elif(tok == "END"):
+				tokens.append("END:"+ifList.pop())
 			tok = ""
-
+		elif(ifControl == 1):
+			ifCond += c
 		elif(c == "$" and isRightValue == 0 and isPrinting == 0):
 			isVar = 1
 		elif(c == "$" and isRightValue == 0 and isPrinting == 1):
@@ -75,7 +92,7 @@ def lex(fileContent):
 			else:
 				isVar = 0;
 				isRightValue = 1;
-		elif(c in "+-/*()" and isExpr == 0):
+		elif(c in "+-/*%()" and isExpr == 0 and isString == 0):
 			expr += numbers+c
 			isExpr = 1
 			isRightVarFlag = 0
@@ -100,9 +117,39 @@ def calculateExpr(data):
 		data = data.replace("$"+x,varDict[x])
 	return eval(data)
 
+def checkCondition(cond):
+	side = -1
+	leftSide = ""
+	rightSide = ""
+	op = ""
+	for x in list(cond):
+		if(side == -1 and x not in "<>="):
+			leftSide += x
+		elif(x in "<>="):
+			op += x
+			side = 1
+		elif(side == 1):
+			rightSide += x
+
+	if(op == ">"):
+		return (calculateExpr(leftSide) > calculateExpr(rightSide))
+	elif(op == "<"):
+		return (calculateExpr(leftSide) < calculateExpr(rightSide))
+	elif(op == "="):
+		if("\"" in leftSide and "\"" in rightSide):
+			return (leftSide == rightSide)
+		else:
+			return (calculateExpr(leftSide) == calculateExpr(rightSide))
+	elif(op == "=<"):
+		return (calculateExpr(leftSide) <= calculateExpr(rightSide))
+	elif(op == ">="):
+		return (calculateExpr(leftSide) >= calculateExpr(rightSide))
+
+
 
 def parse(data):
 	i = 0
+	ifList = []
 	while i < len(data):
 		if(data[i] == "PRINT"):
 			dataType = data[i+1].split(":")[0]
@@ -126,15 +173,33 @@ def parse(data):
 			i += 2
 
 		elif(data[i] == "INPUT"):
-			if("VAR:" in data[i+1]):
+			if("VAR:" in data[i+1] and "STRING:" not in data[i+2]):
 				inputVar = data[i+1].split(":")[1]
 				varDict[inputVar] = input()
 				i += 2
 			else:
-				inputString = data[i+1]
-				inputVar = data[i+2].split(":")[1]
+				inputString = data[i+2]
+				inputVar = data[i+1].split(":")[1]
 				varDict[inputVar] = input(inputString.replace("STRING:",""))
 				i += 3
+
+		elif("IF" in data[i]):
+			ifNo = data[i].split(":")[1]
+			cond = data[i+1].split(":")[1]
+			if(checkCondition(cond)):
+				i += 2
+			else:
+				i += 2
+				count = 1
+				for x in data[i:len(data)]:
+					if("END" in x and x.split(":")[1] == ifNo):
+						break
+					count += 1
+				i += count
+				count = 0
+
+		elif("END" in data[i]):
+			i += 1
 
 
 def run():
@@ -144,4 +209,4 @@ def run():
 	# print(varDict)
 
 run()
-	
+
